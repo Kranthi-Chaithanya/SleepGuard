@@ -97,3 +97,31 @@ AlarmReceiver (wake time) ──► SessionManager.end() ──► SessionStore 
 - Grayscale / Do Not Disturb toggle at bedtime (`NotificationManager` policy access)
 - Weekly report and streaks
 - Health Connect export
+
+---
+
+# SleepGuard for Windows PC (`desktop/`)
+
+C# · .NET 10 · WinForms · single self-contained `SleepGuard-PC.exe` (Windows 10/11 x64, no install, no admin).
+
+| | Basic mode | Strict mode |
+|---|---|---|
+| Full-screen "Time to sleep" screen, other apps minimized | ✅ | ✅ |
+| Phone Link (calls), Clock and your allowed apps keep working | ✅ | ✅ |
+| "Back to desktop" / use an app for 5 min (3× a night) | ✅ | ❌ |
+| End early / exit SleepGuard | ✅ | ❌ (emergency code only) |
+| Task Manager, Settings, Registry Editor, command prompts | usable | blocked |
+| Restarting the PC resumes sleep mode | ✅ | ✅ |
+
+Also: a reminder 15 minutes before bedtime, an optional "put the PC to sleep after N idle minutes", and a
+History tab with a 7-night chart and 1–5★ ratings. Night tracking uses keyboard/mouse activity:
+PC use during sleep time, wake-ups (back on the PC after 5+ idle minutes) and blocked app opens.
+
+Data lives in `%APPDATA%\SleepGuard` (settings, current night, history as JSON).
+
+**Build:** `dotnet publish desktop/SleepGuard.Desktop -c Release -r win-x64 --self-contained -p:PublishSingleFile=true`
+(or let GitHub Actions do it — every push to `main` publishes both the APK and the EXE as a release).
+
+**Limits:** the PC blocker works at the window level without admin rights, so a determined person could still
+sign out, use another Windows account, or boot into Safe Mode. Strict mode disables Task Manager through a
+per-user policy and turns it back on at wake-up (or on the next start if SleepGuard was closed abnormally).

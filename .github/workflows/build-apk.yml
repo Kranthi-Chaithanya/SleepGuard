@@ -1,4 +1,4 @@
-name: Build APK
+name: Build apps
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  android:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -41,24 +41,63 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace --no-daemon
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk SleepGuard.apk
+      - run: cp app/build/outputs/apk/debug/app-debug.apk SleepGuard.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SleepGuard-apk
+          name: android
           path: SleepGuard.apk
 
-      # Every successful build of main is published as a downloadable release.
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build SleepGuard-PC.exe
+        run: >
+          dotnet publish desktop/SleepGuard.Desktop/SleepGuard.Desktop.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o out
+
+      - run: Copy-Item out/SleepGuard.exe SleepGuard-PC.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: SleepGuard-PC.exe
+
+  release:
+    needs: [android, windows]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
       - name: Publish release
-        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: SleepGuard 1.0 (build ${{ github.run_number }})
           make_latest: true
-          files: SleepGuard.apk
+          files: |
+            dist/SleepGuard.apk
+            dist/SleepGuard-PC.exe
           body: |
-            **Install:** download `SleepGuard.apk` on your phone and open it (allow "Install unknown apps" for your browser or Files app).
+            ## 📱 Android — `SleepGuard.apk`
+            Download on your phone and open it (allow "Install unknown apps" for your browser or Files app).
+            Then: App info → ⋮ → *Allow restricted settings*, and turn on SleepGuard under Settings → Accessibility.
 
-            **After installing:** App info → ⋮ → *Allow restricted settings*, then turn on SleepGuard under Settings → Accessibility. The app's Tonight tab walks you through the rest.
+            ## 💻 Windows PC — `SleepGuard-PC.exe`
+            Windows 10/11, 64-bit. No install needed: save it somewhere permanent (e.g. Documents) and double-click.
+            Windows SmartScreen may say "Windows protected your PC" because the app isn't code-signed — click **More info → Run anyway**.
+            SleepGuard then lives in the tray (moon icon near the clock) and starts with Windows.
