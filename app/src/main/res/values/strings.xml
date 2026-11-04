@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SleepGuard</string>
+    <string name="accessibility_description">SleepGuard uses this service only to see which app is opened during your scheduled sleep time, so it can send blocked apps back to the home screen. The phone, clock and keyboard always stay usable. No screen content is read, stored or sent anywhere.</string>
+    <string name="device_admin_description">Prevents SleepGuard from being uninstalled while strict sleep mode is active.</string>
+</resources>
